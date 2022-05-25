@@ -147,7 +147,7 @@ function place() {
         x1 = j % 10;
         y1 = (j - x1) / 10;
         if (docking[j]) {
-            over.runCommand(`structure load koridor${docking[j]} ${204 + (5-x1)*25} -25 ${230 + (4-y1)*25}`);
+            over.runCommand(`structure load koridor${docking[j]} ${204 + (5-x1)*25 - 5 + x1} -25 ${230 + (4-y1)*25 - 4 + y1}`);
         }
     }
 }

@@ -10,11 +10,11 @@ world.events.tick.subscribe(({ currentTick }) => {
             over.runCommand("scoreboard players set online game 0");
             start();
             dock();
-            /*for (let j = 0; j < 100; j++) {
+            for (let j = 0; j < 100; j++) {
   if (floorplan[j] == 5 && nCount(j)) {
   floorplan[j] = 6;
   endrooms.push(j);
-}}*/
+}}
 place();
 over.runCommand(`say Колец: ${loop} ; Биг рум: ${bigRoom} ; Конечные комнаты: ${endrooms} ; Количество: ${floorplanCount}`);
         }
@@ -142,12 +142,12 @@ function dock() {
   }
 }
 function place() {
-    let y1;
+    let y1,degr = [0,90,0,180,0,90,0,270,270,90,270,180,180,90,0],num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15];
     for (let j=0;j<100;j++) {
         x1 = j % 10;
         y1 = (j - x1) / 10;
         if (docking[j]) {
-            over.runCommand(`structure load koridor${docking[j]} ${204 + (5-x1)*25 - 5 + x1} -25 ${230 + (4-y1)*25 - 4 + y1}`);
+            over.runCommand(`structure load koridor${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} -25 ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
         }
     }
 }

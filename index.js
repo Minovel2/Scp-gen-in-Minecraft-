@@ -1,5 +1,5 @@
 import { world } from "mojang-minecraft";
-let startRoom = 45,floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
+let startRoom = 45,abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
 let maxrooms = 50;
 let minrooms = 20;
 
@@ -16,7 +16,7 @@ world.events.tick.subscribe(({ currentTick }) => {
   endrooms.push(j);
 }}
 place();
-over.runCommand(`say Колец: ${loop} ; Биг рум: ${bigRoom} ; Конечные комнаты: ${endrooms} ; Количество: ${floorplanCount}`);
+over.runCommand(`say Колец: ${loop} ; Биг рум: ${bigRoom} ; Количество: ${floorplanCount}`);
         }
 }
 })
@@ -142,12 +142,13 @@ function dock() {
   }
 }
 function place() {
-    let y1,degr = [0,90,0,180,0,90,0,270,270,90,270,180,180,90,0],num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15];
+    let y1,z1,degr = [0,90,0,180,0,90,0,270,270,90,270,180,180,90,0],num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15];
     for (let j=0;j<100;j++) {
         x1 = j % 10;
         y1 = (j - x1) / 10;
+        z1 = -25;
         if (docking[j]) {
-            over.runCommand(`structure load koridor${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} -25 ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+            over.runCommand(`structure load koridor${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} ${z1} ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
         }
     }
 }

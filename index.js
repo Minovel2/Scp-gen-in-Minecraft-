@@ -1,28 +1,37 @@
 import { world } from "mojang-minecraft";
-let startRoom = 45,abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
+let startRoom = 45,seedNum,abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
 let maxrooms = 50;
 let minrooms = 20;
+let rooms = ["D-class","exit_L","SCP-173","office","toilet","corridor","SCP-914","SCP-372","SCP-012","armory","gateway","greenhouse"];
 
 let over = world.getDimension("overworld");
 world.events.tick.subscribe(({ currentTick }) => {
     if (currentTick % 20 == 0) {
         if (score("online","game") == 1) {
+            let seed = makeseed();
+            seedNum = "";
             over.runCommand("scoreboard players set online game 0");
+            for (let j=0;(j<seed.length && j < 8);j++)
+            seedNum += abc.indexOf(seed[j]);
+            seedNum = new Random(+seedNum);
             start();
             dock();
-            for (let j = 0; j < 100; j++) {
-  if (floorplan[j] == 5 && nCount(j)) {
-  floorplan[j] = 6;
-  endrooms.push(j);
-}}
-place();
-over.runCommand(`say Колец: ${loop} ; Биг рум: ${bigRoom} ; Количество: ${floorplanCount}`);
+            mapping();
+            place();
+            over.runCommand(`say Сид: ${seed} ; Колец: ${loop} ; Биг рум: ${bigRoom} ; Количество: ${floorplanCount}`);
         }
 }
 })
 
 const score = (player, objective) => parseInt(over.runCommand(`scoreboard players test "${player}" ${objective} * *`)?.statusMessage?.split(" ")[1] || 0);
 
+function makeseed() {
+  let seed = "";
+  for (let j=0;j<8;j++) {
+    seed += abc[Math.floor(Math.random()*abc.length)];
+  }
+  return seed;
+}
 function start() {
   for (let j = 0; j < 100; j++) {
   floorplan[j] = 0;
@@ -141,14 +150,63 @@ function dock() {
     line(x1,j,() => docking[j] += 8,() => docking[j] += 2,() => docking[j] += 1,() => docking[j] += 4);
   }
 }
+function Random(seed) {
+  seed = (seed || 9) % 2147483647;
+  return {
+    next: function() {
+      return seed = seed * 48271 % 2147483647;
+    },
+  };
+};
+function random(n = true) {
+  let num1 = `${seedNum.next()}`,num2 = `${seedNum.next()}`;
+  let res = parseFloat(`0.${num1[num1.length-2]}${num2[num2.length-2]}${num1[num1.length-4]}${num2[num2.length-4]}`);
+  if (n === true)
+  return res
+  return Math.floor(res*n);
+}
+function map1(arr,num,min = 1,max = min) {
+  for (let j=0;j < random(max-min+1)+min;j++) {
+  floorplan[arr.splice(random(arr.length),1)] = num;
+  }
+}
+function mapping() {
+    let straight = [], triple = [];
+    for (let j = 0; j < 100; j++) {
+  if (floorplan[j] == 5 && nCount(j))
+  endrooms.push(j);
+  if (docking[j] == 5 || docking[j] == 10)
+  straight.push(j);
+  if (docking[j] == 14 || docking[j] == 13 || docking[j] == 11 || docking[j] == 7)
+  triple.push(j);
+}
+  map1(endrooms,0);
+floorplan[endrooms.pop()] = 1;
+floorplan[endrooms.shift()] = 1;
+  if (random < 0.5)
+  map1(triple,2);
+  else map1(straight,2);
+  map1(endrooms,3);
+  map1(straight,4);
+  map1(endrooms,6);
+  map1(endrooms,7);
+  map1(endrooms,8);
+  map1(endrooms,9);
+  map1(straight,10,1,3);
+  map1(straight,11,2,5);
+}
 function place() {
     let y1,z1,degr = [0,90,0,180,0,90,0,270,270,90,270,180,180,90,0],num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15];
     for (let j=0;j<100;j++) {
         x1 = j % 10;
         y1 = (j - x1) / 10;
         z1 = -25;
+        if (floorplan[j] == 8)
+        z1 += -16;
         if (docking[j]) {
-            over.runCommand(`structure load koridor${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} ${z1} ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+           try {
+              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} ${z1} ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+           } catch {over.runCommand(`say structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 - 5 + x1} ${z1} ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);}
         }
     }
 }

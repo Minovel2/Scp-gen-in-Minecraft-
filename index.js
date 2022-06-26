@@ -205,8 +205,8 @@ function place() {
         z1 += -16;
         if (docking[j]) {
            try {
-              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} ${z1} ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
-           } catch {over.runCommand(`structure load corridor_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} -25 ${230 + (4-y1)*25 - 4 + y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} ${z1} ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+           } catch {over.runCommand(`structure load corridor_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} -25 ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
                over.runCommand(`say error: ${rooms[floorplan[j]]}_${num[docking[j]-1]}`);
            }
         }

@@ -129,7 +129,7 @@ function visit(j) {
     }
     else if (floorplan[j] > 1) {
     nAdd(j);
-    floorplan[j] = 7;
+    floorplan[j] = 5;
     loop++;
     } }
      if (floorplan[j] < 2)
@@ -139,7 +139,7 @@ function visit(j) {
 function bigR(j) {
   if (bigRoom < maxBigRoom && floorplan[j] == 2) {
     bigRoom++;
-    nAdd(j,8);
+    nAdd(j);
   }
 }
 function dock() {

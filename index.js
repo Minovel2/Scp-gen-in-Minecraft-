@@ -1,12 +1,26 @@
 import { world } from "mojang-minecraft";
-let startRoom = 45,seedNum,abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
+let startRoom = 45,seedNum,degr = [0,1,0,2,0,1,0,3,3,1,3,2,2,1,0],abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",floorplan = [], docking = [],i,ochered = [],endrooms = [],placed,floorplanCount,x, x1, count,loop, bigRoom,maxloop = 2, maxBigRoom = 3;
 let maxrooms = 50;
 let minrooms = 20;
-let rooms = ["D-class","exit_L","SCP-173","office","toilet","corridor","SCP-914","SCP-372","SCP-012","armory","gateway","greenhouse"];
 
 let over = world.getDimension("overworld");
 world.events.tick.subscribe(({ currentTick }) => {
     if (currentTick % 20 == 0) {
+        if (floorplan.length > 1) {
+        let ent = [...over.getEntities()]
+        for (let i=0;i<ent.length;i++) {
+            if (ent[i].id == "map:helper" && ent[i].nameTag.split("-")[0] == "set") {
+                let ex = ent[i].location.x, ez = ent[i].location.z, spl = ent[i].nameTag.split("-");
+                let x = Math.floor((209+5*25-ex)/26)+1, y = Math.floor((234+4*25-ez)/26)+1;
+                let rot = degr[docking[y*10 + x]-1],bData = [0,2,1,3,4,6,5,7,8,10,9,11,12,14,13,15];
+                let data = bData.indexOf(+spl[2]) % 4 + rot < 4 ? bData[bData.indexOf(+spl[2])+rot] : bData[bData.indexOf(+spl[2])+rot - 4];
+                try {
+                ent[i].runCommand(`setblock ~~~ ${spl[1]} ${data}`);
+                } catch {}
+                ent[i].kill();
+            }
+        }
+    }
         if (score("online","game") == 1) {
             let seed = makeseed();
             seedNum = "";
@@ -100,7 +114,7 @@ function visit(j) {
   if (floorplan[j] == undefined || floorplan[j] > 4)
         return;
 
-    if (Math.random() < 0.5 && j != startRoom + 10)
+    if (random() < 0.5 && j != startRoom + 10)
         return;
         
     if (floorplan[j] > 1 && loop >= maxloop)
@@ -137,7 +151,7 @@ function visit(j) {
     return;
 }
 function bigR(j) {
-  if (bigRoom < maxBigRoom && floorplan[j] == 2) {
+  if (bigRoom < maxBigRoom && random() < 0.6 && floorplan[j] == 2) {
     bigRoom++;
     nAdd(j);
   }
@@ -196,7 +210,7 @@ floorplan[endrooms.shift()] = 1;
   map1(straight,11,2,5);
 }
 function place() {
-    let y1,z1,degr = [0,90,0,180,0,90,0,270,270,90,270,180,180,90,0],num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15];
+    let y1,z1,num = [1,1,3,1,5,3,7,1,3,5,7,3,7,7,15],rooms = ["D-class","exit_L","SCP-173","office","toilet","corridor","SCP-914","SCP-372","SCP-012","armory","gateway","greenhouse"];
     for (let j=0;j<100;j++) {
         x1 = j % 10;
         y1 = (j - x1) / 10;
@@ -205,8 +219,8 @@ function place() {
         z1 += -16;
         if (docking[j]) {
            try {
-              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} ${z1} ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
-           } catch {over.runCommand(`structure load corridor_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} -25 ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]}_degrees none layer_by_layer 0`);
+              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} ${z1} ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]*90}_degrees none layer_by_layer 0`);
+           } catch {over.runCommand(`structure load corridor_${num[docking[j]-1]} ${204 + (5 -x1)*25 + 5 - x1} -25 ${230 + (4-y1)*25 + 4 - y1} ${degr[docking[j]-1]*90}_degrees none layer_by_layer 0`);
                over.runCommand(`say error: ${rooms[floorplan[j]]}_${num[docking[j]-1]}`);
            }
         }

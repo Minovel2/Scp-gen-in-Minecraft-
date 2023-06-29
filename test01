@@ -1,9 +1,31 @@
 import { world, system } from "@minecraft/server"
-let startRoom = 45,mode,seed,type = [],obmen = [],seedNum,degr = [0,1,0,2,0,1,0,3,3,1,3,2,2,1,0],abc = "0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZzАаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЬьЫыЭэЮюЯя",floorplan = [], docking = [],ochered = [],endrooms = [],floorplanCount,count,loop,zoneL={},zoneH={},zoneO={}, bigRoom,maxloop = 2, maxBigRoom = 3;
+let startRoom = 45,mode,seed,type = [],obmen = [],seedNum,degr = [0,1,0,2,0,1,0,3,3,1,3,2,2,1,0],abc = "0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZzАаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЬьЫыЭэЮюЯя",floorplan = [], docking = [],ochered = [],endrooms = [],floorplanCount,generatorOn = false,genCount = 0,count,loop,g,zoneL={},zoneH={},zoneO={}, bigRoom,maxloop = 2, maxBigRoom = 3;
 let maxrooms = 50, x1;
 let minrooms = 20;
+let nextStep = false;
 
 let over = world.getDimension("overworld");
+
+system.runInterval(() => {
+    
+    if (generatorOn && genCount < 200) {
+        genCount++;
+        start();
+        if (nextStep) {
+  genCount = 0;
+  generatorOn = false;
+  nextStep = false;
+  dock();
+  mapping();
+  if (mode == 0) floorCopy(zoneL);
+  if (mode == 1) floorCopy(zoneH);
+  if (mode == 2) floorCopy(zoneO);
+  place();
+  over.runCommandAsync(`say Сид: ${seed} ; Колец: ${loop} ; Биг рум: ${bigRoom} ; Количество: ${floorplanCount[3]}`);
+        }
+    }
+},0)
+
 system.runInterval(() => {
         if (zoneL.length > 1) {
         let ent = [...over.getEntities()]
@@ -33,7 +55,6 @@ system.runInterval(() => {
             }
             over.runCommand("scoreboard players set online game 0");
             gen(scores - 1);
-            over.runCommandAsync(`say Сид: ${seed} ; Колец: ${loop} ; Биг рум: ${bigRoom} ; Количество: ${floorplanCount[3]}`);
         }
     },19)
 
@@ -61,21 +82,65 @@ function gen(n) {
   if (n == 2) startRoom = obmen[1] || 45;
   else startRoom = 45;
   mode = n;
-  start();
-  dock();
-  mapping();
-  if (n == 0) floorCopy(zoneL);
-  if (n == 1) floorCopy(zoneH);
-  if (n == 2) floorCopy(zoneO);
-  place();
+  generatorOn = true;
 }
 
 function floor(f,j = 1) {
     for (let i=0; i<100; i+=j)
     f(i);
 }
+function circleLength(mom, j) {
+    let map = [], ochered = [];
+    map[mom] = 2;
+    ochered.push(mom);
+    for (let i = 0; i<100; i++) {
+        let room = ochered.shift();
+        
+        let x = room % 10;
+        let dirs = [], arr1 = [];
+        
+        if (docking[room] < 0)
+        dirs = getDir(-1 * docking[room]);
+        if (room > 9 && !dirs.includes(1))
+        arr1.push(room-10);
+        
+        if (x < 9 && !dirs.includes(2))
+        arr1.push(room+1);
+        
+        if (room < 90 && !dirs.includes(4))
+        arr1.push(room+10);
+        
+        if (x > 0 && !dirs.includes(8))
+        arr1.push(room-1);
+        
+        for (let check of arr1) {
+            if (floorplan[check] == 5 && map[check] == undefined) {
+                if (check == j && room !== mom) {
+                return map[room];
+                }
+                if (check !== j) {
+                map[check] = map[room] + 1;
+                ochered.push(check);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+function getDir(num) {
+    let arr = [];
+    
+    for (let n of [8,4,2,1]) {
+        if (num - n >= 0) {
+            arr.push(n);
+            num -= n;
+        }
+    }
+    return arr;
+}
 function unDock2(mother,from, to, dir, useRandom = true) {
-    if (to == mother || floorplan[to] < 5)
+    if (to == mother || floorplan[to] < 5 || floorplan[to] == undefined)
     return 0;
   if (useRandom == false || random() > 0.5) {
       let dir1 = dir * 4;
@@ -91,18 +156,17 @@ function unDock2(mother,from, to, dir, useRandom = true) {
 }
 
 function unDock(mother, j) {
-    let g = 0;
-    if (random() > 0.1) {
-    g += unDock2(mother,j,j - 10,1,false);
-    g += unDock2(mother,j,j + 1,2,false);
-    g += unDock2(mother,j,j + 10,4,false);
-    g += unDock2(mother,j,j - 1,8,false);
-    } else {
-    g += unDock2(mother,j,j - 10,1);
-    g += unDock2(mother,j,j + 1,2);
-    g += unDock2(mother,j,j + 10,4);
-    g += unDock2(mother,j,j - 1,8);
+    let circle = circleLength(mother,j);
+    if (circle > 7 && loop < maxloop) {
+       // console.warn(circle + " " + mother + " " + j)
+        loop++;
+        return 0;
     }
+  let x1 = j % 10;
+    g = 0;
+    
+    line(floorplan,5,x1,j,() => g += unDock2(mother,j,j - 1,8,false),() => g += unDock2(mother,j,j + 1,2,false),() => g += unDock2(mother,j,j - 10,1,false),() => g += unDock2(mother,j,j + 10,4,false));
+    
     return g;
 }
 
@@ -114,7 +178,7 @@ function floorCopy(obj) {
 }
 
 function start() {
-  for (let k = 0; k < 10000; k++) {
+  for (let k = 0; k < 50; k++) {
 floor((i) => floorplan[i] = 0);
 floor((i) => docking[i] = 0);
 floorplanCount = [0,0,0,0];
@@ -153,13 +217,14 @@ if (mode == 2) type[startRoom] = obmen[0];
     if (floorplan[obmen[1]] != 5 || floorplan[obmen[2]] != 5 || !nCount(obmen[1]) || !nCount(obmen[2]) || floorplan[obmen[2]+1] != 5 || floorplan[obmen[1]+1] != 5) {
     continue;
   }}
+  nextStep = true;
   break;
   }
 }
 
 function endCount() {
     let c = 0;
-    for (let i=0; i<99; i++) {
+    for (let i=0; i<100; i++) {
         if (nCount(i) && floorplan[i] == 5)
         c++;
     }
@@ -278,33 +343,19 @@ function visit(j,from) {
     else if (floorplan[j] > 1) {
         nAdd(j,type[from]);
         floorplan[j] = 5;
-        if (unDock(from,j) == 0)
-        loop++;
+        unDock(from,j)
     } }
      if (floorplan[j] < 2)
     nAdd(j,type[from]);
     return;
 }
 function bigR(j,i) {
-  //if (bigRoom < maxBigRoom && random() < 0.4 && floorplan[j] == 2) {
-  if (loop < maxloop) {
-     // let neib = nCount(i,true);
+      nAdd(j,type[i]);
       let abob = unDock(i,j);
-     /* if (neib == 3 && abob <= 1) {
-      loop++; } else if (neib == 2 && abob == 0) {
-      loop++;
-      }*/
-      if (abob <= floorplan[j] - 2) {
-        /*if (mode == 0)
-        console.log(abob)*/
-      loop++;
-      }
-  }
-  nAdd(j,type[i]);
 }
 function dock() {
   floor((j) => {
-      let x1 = j % 10;
+      x1 = j % 10;
     if (floorplan[j] > 4)
     line(floorplan,5,x1,j,() => docking[j] += 8,() => docking[j] += 2,() => docking[j] += 1,() => docking[j] += 4);
   });
@@ -340,6 +391,8 @@ function mapping() {
   triple.push(j);
   if (docking[j] == 3 || docking[j] == 6 || docking[j] == 12 || docking[j] == 9)
   corner.push(j);
+  
+  
 }
 if (mode == 0) {
   map1(endrooms,0);
@@ -413,18 +466,15 @@ function place() {
         if (floorplan[j] == 8)
         z1 += -16;
         if (docking[j]) {
-           over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${centreX + (startX -x1)*26} ${z1} ${centreY + (startY-y1)*26} ${degr[docking[j]-1]*90}_degrees`)
-           /*.then(
-  function (result) {
-      if (result.successCount == 0) {
-                      over.runCommand(`structure load corridor_L_${num[docking[j]-1]} ${centreX + (startX -x1)*26} ${z1} ${centreY + (startY-y1)*26} ${degr[docking[j]-1]*90}_degrees`);
+            try {
+           if (
+              over.runCommand(`structure load ${rooms[floorplan[j]]}_${num[docking[j]-1]} ${centreX + (startX -x1)*26} ${z1} ${centreY + (startY-y1)*26} ${degr[docking[j]-1]*90}_degrees`).successCount == 0
+           ) {over.runCommandAsync(`structure load corridor_L_${num[docking[j]-1]} ${centreX + (startX -x1)*26} ${z1} ${centreY + (startY-y1)*26} ${degr[docking[j]-1]*90}_degrees`);
               over.runCommandAsync(`say error: ${rooms[floorplan[j]]}_${num[docking[j]-1]}`);
-      }
-  }, 
-  error => {}
-);*/
-           
-           
+           }
+            } catch {
+                console.warn(`${docking[j]} [${j}]`);
+            }
         }
     }
 }
